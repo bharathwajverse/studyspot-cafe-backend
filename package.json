@@ -1,0 +1,25 @@
+{
+  "name": "studyspot-cafe",
+  "version": "1.0.0",
+  "description": "StudySpot Cafe - Study Carrel Booking Management System (Group 4)",
+  "main": "member-1/backend-setup-routing/server.js",
+  "scripts": {
+    "start": "node member-1/backend-setup-routing/server.js",
+    "test": "node --test member-5/tests/api.test.js"
+  },
+  "keywords": [
+    "express",
+    "sqlite3",
+    "rest-api",
+    "studyspot-cafe"
+  ],
+  "author": "Group 4",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  }
+}
