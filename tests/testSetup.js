@@ -20,6 +20,9 @@ const { initDatabase, closeDatabase } = require('../database/database');
  * Initializes the clean test database with schema and seed data.
  */
 async function setupTestDb() {
+    // Ensure active connection is closed before unlinking file on Windows
+    await closeDatabase();
+
     // Delete old test db if it exists
     if (fs.existsSync(testDbPath)) {
         try {
