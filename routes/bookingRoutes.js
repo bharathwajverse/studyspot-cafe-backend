@@ -15,3 +15,4 @@ router.get('/:id', validateIdParam, bookingController.getBookingById);
 router.post('/', validateBooking, bookingController.createBooking);
 
 module.exports = router;
+

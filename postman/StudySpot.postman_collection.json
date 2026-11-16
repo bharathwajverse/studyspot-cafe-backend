@@ -10,9 +10,65 @@
       "key": "baseUrl",
       "value": "http://localhost:3000",
       "type": "string"
+    },
+    {
+      "key": "createdStudentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "createdCarrelId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "createdBookingId",
+      "value": "1",
+      "type": "string"
     }
   ],
   "item": [
+    {
+      "name": "0. Health & Status",
+      "item": [
+        {
+          "name": "Health Check / API Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns operational status message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.message).to.eql(\"StudySpot Cafe API is operational\");",
+                  "    pm.expect(jsonData.group).to.eql(\"Group 4\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            },
+            "description": "Verifies that the server is online and operational."
+          }
+        }
+      ]
+    },
     {
       "name": "1. Students",
       "item": [
@@ -42,42 +98,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/students",
-              "host": ["{{baseUrl}}"],
-              "path": ["students"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
             },
             "description": "Retrieves all registered students."
-          }
-        },
-        {
-          "name": "Get Student By ID",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Returns correct student object\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.eql(true);",
-                  "    pm.expect(jsonData.data.id).to.eql(1);",
-                  "    pm.expect(jsonData.data.name).to.be.a('string');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/students/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["students", "1"]
-            },
-            "description": "Retrieves a student by their unique ID."
           }
         },
         {
@@ -90,11 +118,12 @@
                   "pm.test(\"Status code is 201\", function () {",
                   "    pm.response.to.have.status(201);",
                   "});",
-                  "pm.test(\"Returns created student data\", function () {",
+                  "pm.test(\"Returns created student data and captures ID\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.success).to.eql(true);",
-                  "    pm.expect(jsonData.data.name).to.eql(\"Hannah Abbott\");",
+                  "    pm.expect(jsonData.data.name).to.eql(\"Grace Hopper\");",
                   "    pm.expect(jsonData.data.id).to.be.a('number');",
+                  "    pm.collectionVariables.set(\"createdStudentId\", String(jsonData.data.id));",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -111,14 +140,58 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Hannah Abbott\",\n  \"email\": \"hannah.abbott@example.com\"\n}"
+              "raw": "{\n  \"name\": \"Grace Hopper\",\n  \"email\": \"grace.hopper@example.edu\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/students",
-              "host": ["{{baseUrl}}"],
-              "path": ["students"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
             },
             "description": "Registers a new student."
+          }
+        },
+        {
+          "name": "Get Student By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns correct student object for captured ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    var expectedId = pm.collectionVariables.get(\"createdStudentId\");",
+                  "    if (expectedId) {",
+                  "        pm.expect(jsonData.data.id).to.eql(Number(expectedId));",
+                  "    }",
+                  "    pm.expect(jsonData.data.name).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{createdStudentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{createdStudentId}}"
+              ]
+            },
+            "description": "Retrieves a student by their unique ID."
           }
         },
         {
@@ -155,8 +228,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/students",
-              "host": ["{{baseUrl}}"],
-              "path": ["students"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
             },
             "description": "Demonstrates student validation rejecting missing names."
           }
@@ -192,10 +269,61 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ]
             },
             "description": "Retrieves all study carrels."
+          }
+        },
+        {
+          "name": "Create Carrel (Valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Returns created carrel and captures ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.name).to.eql(\"Carrel D-1\");",
+                  "    pm.expect(jsonData.data.zone).to.eql(\"D\");",
+                  "    pm.expect(jsonData.data.id).to.be.a('number');",
+                  "    pm.collectionVariables.set(\"createdCarrelId\", String(jsonData.data.id));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carrel D-1\",\n  \"zone\": \"D\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ]
+            },
+            "description": "Creates a new study carrel."
           }
         },
         {
@@ -208,10 +336,13 @@
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test(\"Returns carrel data with id, name, and zone\", function () {",
+                  "pm.test(\"Returns carrel data for captured ID\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.success).to.eql(true);",
-                  "    pm.expect(jsonData.data.id).to.eql(1);",
+                  "    var expectedId = pm.collectionVariables.get(\"createdCarrelId\");",
+                  "    if (expectedId) {",
+                  "        pm.expect(jsonData.data.id).to.eql(Number(expectedId));",
+                  "    }",
                   "    pm.expect(jsonData.data.name).to.be.a('string');",
                   "    pm.expect(jsonData.data.zone).to.be.a('string');",
                   "});"
@@ -224,11 +355,62 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/carrels/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels", "1"]
+              "raw": "{{baseUrl}}/carrels/{{createdCarrelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels",
+                "{{createdCarrelId}}"
+              ]
             },
             "description": "Retrieves a single carrel by ID."
+          }
+        },
+        {
+          "name": "Update Carrel (Valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns updated carrel data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.name).to.eql(\"Quiet Focus Pod D-1\");",
+                  "    pm.expect(jsonData.data.zone).to.eql(\"D\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Quiet Focus Pod D-1\",\n  \"zone\": \"D\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrels/{{createdCarrelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels",
+                "{{createdCarrelId}}"
+              ]
+            },
+            "description": "Updates an existing carrel."
           }
         },
         {
@@ -256,92 +438,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels/9999",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels", "9999"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels",
+                "9999"
+              ]
             },
             "description": "Demonstrates 404 response for nonexistent carrel IDs."
-          }
-        },
-        {
-          "name": "Create Carrel (Valid)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 201\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "pm.test(\"Returns created carrel\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.eql(true);",
-                  "    pm.expect(jsonData.data.name).to.eql(\"Silent Study Room\");",
-                  "    pm.expect(jsonData.data.zone).to.eql(\"A\");",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Silent Study Room\",\n  \"zone\": \"A\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/carrels",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"]
-            },
-            "description": "Creates a new study carrel."
-          }
-        },
-        {
-          "name": "Update Carrel (Valid)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Returns updated carrel data\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.eql(true);",
-                  "    pm.expect(jsonData.data.name).to.eql(\"Carrel A-1 Premium\");",
-                  "    pm.expect(jsonData.data.zone).to.eql(\"A\");",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Carrel A-1 Premium\",\n  \"zone\": \"A\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/carrels/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels", "1"]
-            },
-            "description": "Updates an existing carrel."
           }
         },
         {
@@ -369,10 +474,51 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels",
+                "1"
+              ]
             },
             "description": "Attempts to delete a carrel referenced by existing bookings, returning HTTP 409."
+          }
+        },
+        {
+          "name": "Delete Carrel (Success - No Associated Bookings)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Carrel deleted successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.message).to.eql(\"Carrel deleted successfully\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/carrels/4",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels",
+                "4"
+              ]
+            },
+            "description": "Deletes an existing study carrel that has no associated bookings (Carrel A-4)."
           }
         }
       ]
@@ -380,6 +526,53 @@
     {
       "name": "3. Bookings",
       "item": [
+        {
+          "name": "Create Booking (Valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Returns created booking with joined details and captures ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.id).to.be.a('number');",
+                  "    pm.expect(jsonData.data.student_name).to.be.a('string');",
+                  "    pm.expect(jsonData.data.carrel_name).to.be.a('string');",
+                  "    pm.collectionVariables.set(\"createdBookingId\", String(jsonData.data.id));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_id\": {{createdStudentId}},\n  \"carrel_id\": {{createdCarrelId}},\n  \"booking_date\": \"2026-12-01\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            },
+            "description": "Creates a new booking for a student and study carrel."
+          }
+        },
         {
           "name": "Get All Bookings (JOIN)",
           "event": [
@@ -413,8 +606,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["bookings"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
             },
             "description": "Retrieves all bookings with joined student and carrel names via an SQL JOIN query."
           }
@@ -429,10 +626,13 @@
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test(\"Returns joined single booking\", function () {",
+                  "pm.test(\"Returns joined booking for captured ID\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.success).to.eql(true);",
-                  "    pm.expect(jsonData.data.id).to.eql(1);",
+                  "    var expectedId = pm.collectionVariables.get(\"createdBookingId\");",
+                  "    if (expectedId) {",
+                  "        pm.expect(jsonData.data.id).to.eql(Number(expectedId));",
+                  "    }",
                   "    pm.expect(jsonData.data.student_name).to.be.a('string');",
                   "    pm.expect(jsonData.data.carrel_name).to.be.a('string');",
                   "});"
@@ -445,54 +645,16 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/bookings/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["bookings", "1"]
+              "raw": "{{baseUrl}}/bookings/{{createdBookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{createdBookingId}}"
+              ]
             },
             "description": "Retrieves a single booking by ID with joined details."
-          }
-        },
-        {
-          "name": "Create Booking (Valid)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 201\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "pm.test(\"Returns created booking with student and carrel names\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.eql(true);",
-                  "    pm.expect(jsonData.data.student_id).to.eql(1);",
-                  "    pm.expect(jsonData.data.carrel_id).to.eql(3);",
-                  "    pm.expect(jsonData.data.student_name).to.be.a('string');",
-                  "    pm.expect(jsonData.data.carrel_name).to.be.a('string');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"student_id\": 1,\n  \"carrel_id\": 3,\n  \"booking_date\": \"2026-12-15\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["bookings"]
-            },
-            "description": "Creates a new booking for a student and study carrel."
           }
         },
         {
@@ -525,12 +687,16 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"student_id\": 9999,\n  \"carrel_id\": 1,\n  \"booking_date\": \"2026-12-15\"\n}"
+              "raw": "{\n  \"student_id\": 9999,\n  \"carrel_id\": {{createdCarrelId}},\n  \"booking_date\": \"2026-12-15\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["bookings"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
             },
             "description": "Validates that bookings referencing invalid student IDs are rejected."
           }
@@ -565,12 +731,16 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"student_id\": 1,\n  \"carrel_id\": 9999,\n  \"booking_date\": \"2026-12-15\"\n}"
+              "raw": "{\n  \"student_id\": {{createdStudentId}},\n  \"carrel_id\": 9999,\n  \"booking_date\": \"2026-12-15\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["bookings"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
             },
             "description": "Validates that bookings referencing invalid carrel IDs are rejected."
           }
@@ -608,8 +778,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels?zone=A",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ],
               "query": [
                 {
                   "key": "zone",
@@ -647,8 +821,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels?sort=name&order=asc",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ],
               "query": [
                 {
                   "key": "sort",
@@ -690,8 +868,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels?sort=name&order=desc",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ],
               "query": [
                 {
                   "key": "sort",
@@ -731,8 +913,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels?sort=colour",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ],
               "query": [
                 {
                   "key": "sort",
@@ -774,8 +960,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels?zone=A&sort=name&order=asc",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ],
               "query": [
                 {
                   "key": "zone",
@@ -834,8 +1024,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/carrels",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ]
             },
             "description": "Demonstrates carrel validation rejecting empty names with HTTP 400."
           }
@@ -875,8 +1069,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/carrels",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ]
             },
             "description": "Demonstrates carrel validation rejecting whitespace-only values."
           }
@@ -915,8 +1113,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/carrels",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels"
+              ]
             },
             "description": "Demonstrates carrel validation rejecting missing zones."
           }
@@ -951,12 +1153,16 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"student_id\": 1,\n  \"carrel_id\": 1,\n  \"booking_date\": \"not-a-valid-date\"\n}"
+              "raw": "{\n  \"student_id\": {{createdStudentId}},\n  \"carrel_id\": {{createdCarrelId}},\n  \"booking_date\": \"not-a-valid-date\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["bookings"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
             },
             "description": "Demonstrates booking validation enforcing ISO 8601 date formats."
           }
@@ -991,12 +1197,16 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"student_id\": 1,\n  \"carrel_id\": 1,\n  \"booking_date\": \"2026-02-30\"\n}"
+              "raw": "{\n  \"student_id\": {{createdStudentId}},\n  \"carrel_id\": {{createdCarrelId}},\n  \"booking_date\": \"2026-02-30\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["bookings"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
             },
             "description": "Demonstrates rejection of impossible calendar dates such as 2026-02-30."
           }
@@ -1031,12 +1241,16 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"student_id\": \"12abc\",\n  \"carrel_id\": 1,\n  \"booking_date\": \"2026-12-15\"\n}"
+              "raw": "{\n  \"student_id\": \"12abc\",\n  \"carrel_id\": {{createdCarrelId}},\n  \"booking_date\": \"2026-12-15\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/bookings",
-              "host": ["{{baseUrl}}"],
-              "path": ["bookings"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
             },
             "description": "Demonstrates rejection of malformed student IDs such as 12abc."
           }
@@ -1066,8 +1280,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/carrels/12abc",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrels", "12abc"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrels",
+                "12abc"
+              ]
             },
             "description": "Demonstrates route ID validation rejecting malformed parameter IDs like 12abc."
           }
@@ -1097,10 +1316,103 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/nonexistent-route",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "nonexistent-route"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "nonexistent-route"
+              ]
             },
             "description": "Demonstrates central 404 handling for undefined routes."
+          }
+        },
+        {
+          "name": "Student Validation - Invalid Email Format (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Returns validation error for email\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "    pm.expect(jsonData.errors).to.include(\"Invalid email format\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Testing Student\",\n  \"email\": \"not-an-email\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Rejects student registration when email format is invalid."
+          }
+        },
+        {
+          "name": "General - Malformed JSON Body (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Returns malformed JSON error message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "    pm.expect(jsonData.message).to.match(/Malformed JSON/i);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Broken JSON"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Rejects malformed JSON syntax in request payload with clean HTTP 400."
           }
         }
       ]

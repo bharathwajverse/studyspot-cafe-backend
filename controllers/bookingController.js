@@ -26,7 +26,7 @@ async function getAllBookings(req, res, next) {
             ORDER BY b.id ASC
         `.trim();
 
-        const bookings = await db.query(sql);
+        const bookings = await db.all(sql);
 
         return res.status(200).json({
             success: true,
@@ -131,3 +131,4 @@ module.exports = {
     getBookingById,
     createBooking
 };
+

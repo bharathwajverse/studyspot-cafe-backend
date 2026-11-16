@@ -40,6 +40,16 @@ describe('StudySpot Cafe - Group 4 API Automated Test Suite', () => {
             assert.strictEqual(res.body.success, false);
             assert.match(res.body.message, /Resource not found/i);
         });
+
+        it('POST /students with malformed JSON body should return 400 with clean error format', async () => {
+            const res = await request(app)
+                .post('/students')
+                .set('Content-Type', 'application/json')
+                .send('{ "name": "Invalid JSON');
+            assert.strictEqual(res.status, 400);
+            assert.strictEqual(res.body.success, false);
+            assert.match(res.body.message, /Malformed JSON/i);
+        });
     });
 
     // ==========================================
@@ -348,6 +358,14 @@ describe('StudySpot Cafe - Group 4 API Automated Test Suite', () => {
             const res = await request(app).get('/carrels');
             assert.strictEqual(res.status, 200);
             assert.strictEqual(res.body.success, true);
+            assert.ok(res.body.data.length >= 10);
+        });
+
+        it('GET /carrels?zone= with empty zone parameter should return all carrels', async () => {
+            const res = await request(app).get('/carrels?zone=');
+            assert.strictEqual(res.status, 200);
+            assert.strictEqual(res.body.success, true);
+            assert.ok(Array.isArray(res.body.data));
             assert.ok(res.body.data.length >= 10);
         });
     });
@@ -699,6 +717,26 @@ describe('StudySpot Cafe - Group 4 API Automated Test Suite', () => {
             await db.initDatabase();
             const restoredBookings = await db.get('SELECT COUNT(*) as count FROM bookings');
             assert.ok(restoredBookings.count >= 5);
+        });
+
+        it('initDatabase() safely restores individual deleted seed records without duplicating user records', async () => {
+            const countBefore = await db.get('SELECT COUNT(*) as count FROM students');
+
+            // Remove foreign-key dependent booking before deleting student 1
+            await db.run('DELETE FROM bookings WHERE student_id = 1');
+            await db.run('DELETE FROM students WHERE id = 1');
+            const missingStudent = await db.get('SELECT * FROM students WHERE id = 1');
+            assert.strictEqual(missingStudent, undefined);
+
+            // Re-run initDatabase: seed.sql uses INSERT OR IGNORE, restoring student 1
+            await db.initDatabase();
+            const restoredStudent = await db.get('SELECT * FROM students WHERE id = 1');
+            assert.ok(restoredStudent);
+            assert.strictEqual(restoredStudent.name, 'Alice Johnson');
+
+            // Verify count is restored back to countBefore without creating duplicates
+            const countAfter = await db.get('SELECT COUNT(*) as count FROM students');
+            assert.strictEqual(countAfter.count, countBefore.count);
         });
     });
 
