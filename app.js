@@ -1,4 +1,4 @@
-/**
+/***
  * Express Application Configuration
  * StudySpot Cafe - Study Carrel Booking Management System
  * Configures middleware, mounts resource routes, and handles 404 / global errors.
