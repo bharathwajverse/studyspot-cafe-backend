@@ -119,6 +119,36 @@ describe('StudySpot Cafe - Group 4 API Automated Test Suite', () => {
             assert.ok(res.body.errors.includes('Student name is required'));
         });
 
+        it('POST /students should reject whitespace-only name with HTTP 400', async () => {
+            const res = await request(app).post('/students').send({
+                name: '   ',
+                email: 'whitespace@example.com'
+            });
+            assert.strictEqual(res.status, 400);
+            assert.strictEqual(res.body.success, false);
+            assert.ok(res.body.errors.includes('Student name is required'));
+        });
+
+        it('POST /students should reject non-string email with HTTP 400', async () => {
+            const res = await request(app).post('/students').send({
+                name: 'Valid Name',
+                email: 12345
+            });
+            assert.strictEqual(res.status, 400);
+            assert.strictEqual(res.body.success, false);
+            assert.ok(res.body.errors.includes('Email must be a text string'));
+        });
+
+        it('POST /students should trim leading and trailing whitespace from student name', async () => {
+            const res = await request(app).post('/students').send({
+                name: '  Trimmed Student  ',
+                email: 'trimmed@example.com'
+            });
+            assert.strictEqual(res.status, 201);
+            assert.strictEqual(res.body.success, true);
+            assert.strictEqual(res.body.data.name, 'Trimmed Student');
+        });
+
         it('POST /students should reject an invalid email format', async () => {
             const res = await request(app).post('/students').send({
                 name: 'Bad Email Student',
@@ -183,6 +213,13 @@ describe('StudySpot Cafe - Group 4 API Automated Test Suite', () => {
 
         it('GET /carrels/:id should reject zero ID "0" with HTTP 400', async () => {
             const res = await request(app).get('/carrels/0');
+            assert.strictEqual(res.status, 400);
+            assert.strictEqual(res.body.success, false);
+            assert.match(res.body.message, /Invalid ID parameter/i);
+        });
+
+        it('GET /carrels/:id should reject unsafe integer ID with HTTP 400', async () => {
+            const res = await request(app).get('/carrels/9999999999999999999999');
             assert.strictEqual(res.status, 400);
             assert.strictEqual(res.body.success, false);
             assert.match(res.body.message, /Invalid ID parameter/i);
@@ -333,6 +370,17 @@ describe('StudySpot Cafe - Group 4 API Automated Test Suite', () => {
             assert.ok(res.body.data.length > 0);
             for (const carrel of res.body.data) {
                 assert.strictEqual(carrel.zone.toUpperCase(), 'B');
+            }
+        });
+
+        it('GET /carrels?zone=a (lowercase) should perform case-insensitive zone filtering', async () => {
+            const res = await request(app).get('/carrels?zone=a');
+            assert.strictEqual(res.status, 200);
+            assert.strictEqual(res.body.success, true);
+            assert.ok(Array.isArray(res.body.data));
+            assert.ok(res.body.data.length > 0);
+            for (const carrel of res.body.data) {
+                assert.strictEqual(carrel.zone.toUpperCase(), 'A');
             }
         });
 

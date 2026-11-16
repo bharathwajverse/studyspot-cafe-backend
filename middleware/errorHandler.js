@@ -11,6 +11,11 @@ function errorHandler(err, req, res, next) {
     // Default client-facing message
     let clientMessage = err.message || 'An unexpected server error occurred';
 
+    // Handle malformed JSON body errors from express.json()
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        clientMessage = 'Malformed JSON in request body';
+    }
+
     // Mask internal SQLite syntax/disk errors on 500 to protect server internals
     if (statusCode === 500 && (err.code?.startsWith('SQLITE') || /sqlite/i.test(err.message))) {
         clientMessage = 'An internal database error occurred';
