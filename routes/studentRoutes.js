@@ -15,3 +15,4 @@ router.get('/:id', validateIdParam, studentController.getStudentById);
 router.post('/', validateStudent, studentController.createStudent);
 
 module.exports = router;
+
