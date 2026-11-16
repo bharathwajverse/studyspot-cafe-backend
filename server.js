@@ -1,4 +1,4 @@
-/**
+/***
  * Server Entrypoint
  * StudySpot Cafe - Study Carrel Booking Management System
  * Initializes the SQLite database and starts listening on the configured port.
