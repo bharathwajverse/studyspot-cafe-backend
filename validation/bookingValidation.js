@@ -83,6 +83,14 @@ function isValidBookingDate(dateStr) {
 }
 
 function validateBooking(req, res, next) {
+    if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors: ['Request body must be a valid JSON object']
+        });
+    }
+
     const { student_id, carrel_id, booking_date } = req.body;
     const errors = [];
 

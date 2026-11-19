@@ -77,3 +77,4 @@ module.exports = {
     ALLOWED_ORDERS,
     buildSortClause
 };
+
